@@ -1,0 +1,78 @@
+{
+  "blocks": [
+    {
+      "id": "b_chap1_intro",
+      "content": "## 微调与部署\n\n微调是调整预训练模型以适应特定任务的过程。通过冻结大部分层，只训练顶部几层，可以大幅减少训练时间和数据需求。",
+      "keywords": [
+        "微调",
+        "部署",
+        "chapter1",
+        "模型"
+      ],
+      "author": "ai:AI_小Q",
+      "readOnly": true,
+      "deleted": false,
+      "createdAt": "2026-06-19 15:30:00",
+      "updatedAt": "2026-06-19 15:30:00"
+    },
+    {
+      "id": "b_chap1_gpu",
+      "content": "## GPU 要求\n\n微调大型模型（如 GPT-3、LLaMA）需要足够的 GPU 显存。建议使用 A100 或 V100，显存至少 40GB。",
+      "keywords": [
+        "GPU",
+        "算力",
+        "chapter1",
+        "硬件"
+      ],
+      "author": "ai:AI_小Q",
+      "readOnly": true,
+      "deleted": false,
+      "createdAt": "2026-06-19 15:35:00",
+      "updatedAt": "2026-06-19 15:35:00"
+    },
+    {
+      "id": "b_chap2_data",
+      "content": "## 数据准备\n\n高质量数据是微调成功的关键。需要清洗、去重、格式化，并确保数据多样性。",
+      "keywords": [
+        "数据",
+        "清洗",
+        "chapter2",
+        "预处理"
+      ],
+      "author": "ai:AI_小Q",
+      "readOnly": true,
+      "deleted": false,
+      "createdAt": "2026-06-19 16:00:00",
+      "updatedAt": "2026-06-19 16:00:00"
+    },
+    {
+      "id": "b_chap3_eval",
+      "content": "## 模型评估\n\n微调后需要评估模型性能。常用指标包括准确率、F1 分数、困惑度等。",
+      "keywords": [
+        "评估",
+        "指标",
+        "chapter3",
+        "测试"
+      ],
+      "author": "ai:AI_小Q",
+      "readOnly": false,
+      "deleted": false,
+      "createdAt": "2026-06-19 16:30:00",
+      "updatedAt": "2026-06-19 16:30:00"
+    },
+    {
+      "id": "b_handson_llm_readme",
+      "content": "<p align=\"center\">\n<h1 align=\"center\">《动手学大模型》系列编程实践教程</h1>\n</p>\n<p align=\"center\">\n  \t<a href=\"https://img.shields.io/badge/version-v0.1.0-blue\">\n      <img alt=\"version\" src=\"https://img.shields.io/badge/version-v0.1.0-blue?color=FF8000?color=009922\" />\n    </a>\n  <a >\n       <img alt=\"Status-building\" src=\"https://img.shields.io/badge/Status-building-blue\" />\n  \t</a>\n  <a >\n       <img alt=\"PRs-Welcome\" src=\"https://img.shields.io/badge/PRs-Welcome-red\" />\n  \t</a>\n   \t<a href=\"https://github.com/Lordog/dive-into-llms/stargazers\">\n       <img alt=\"stars\" src=\"https://img.shields.io/github/stars/Lordog/dive-into-llms\" />\n  \t</a>\n  \t<a href=\"https://github.com/Lordog/dive-into-llms/network/members\">\n       <img alt=\"FORK\" src=\"https://img.shields.io/github/forks/Lordog/dive-into-llms?color=FF8000\" />\n  \t</a>\n    <a href=\"https://github.com/Lordog/dive-into-llms/issues\">\n      <img alt=\"Issues\" src=\"https://img.shields.io/github/issues/Lordog/dive-into-llms?color=0088ff\"/>\n    </a>\n    <br />\n</p>\n\n\n<div align=\"center\">\n<p align=\"center\">\n  <a href=\"#项目动机\">项目动机</a>/\n  <a href=\"#教程目录\">教程目录</a>/\n  <a href=\"#贡献者列表\">贡献者列表</a>\n</p>\n</div>\n\n## 💡 Updates\n\n2025/06/06  感谢各位朋友们的关注和积极反馈！我们从以下两个方面对本教程进行了更新：\n\n- [x] 上线国产化《大模型开发全流程》公益教程（含PPT、实验手册和视频），此处特别感谢华为昇腾社区的支持！\n- [x] 在原系列编程实践教程的基础上进行内容更新，并增加了新的主题（数学推理、GUI Agent、大模型对齐、隐写术等）！\n\n## 🎯 项目动机\n\n《动手学大模型》系列编程实践教程，由上海交通大学《自然语言处理前沿技术》（NIS8021）、《人工智能安全技术》课程（NIS3353）讲义拓展而来（教师：[张倬胜](https://bcmi.sjtu.edu.cn/home/zhangzs/)），旨在提供大模型相关的入门编程参考。本教程属公益性质、完全免费。通过简单实践，帮助同学们快速入门大模型，更好地开展课程设计或学术研究。\n\n## 📚 教程目录\n\n| 教程内容         | 简介                                                         | 地址                                                         |\n| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |\n| 微调与部署       | 预训练模型微调与部署指南：想提升预训练模型在指定任务上的性能？让我们选择合适的预训练模型，在特定任务上进行微调，并将微调后的模型部署成方便使用的Demo！ | [[课件](https://github.com/Lordog/dive-into-llms/tree/main/documents/",
+      "keywords": [
+        "动手学大模型",
+        "README",
+        "项目说明"
+      ],
+      "author": "github:Lordog/dive-into-llms",
+      "readOnly": true,
+      "deleted": false,
+      "createdAt": "2026-06-19 18:34:00",
+      "updatedAt": "2026-06-19 18:34:00"
+    }
+  ]
+}
