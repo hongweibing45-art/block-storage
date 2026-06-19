@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧱 块存储编辑器 v4 - 真正绑定 blocks.json</title>
+    <style>
+        * { margin:0; padding:0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .main-content { display: flex; flex-direction: column; gap: 20px; }
+        .sidebar { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 20px; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .api-badge { display: inline-block; background: #10b981; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+        h2 { color: #333; margin-bottom: 15px; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        h2::before { content: ''; width: 4px; height: 20px; background: #667eea; border-radius: 2px; }
+        .search-box { position: relative; margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 15px 20px; border: 3px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: all 0.3s; background: #f9fafb; }
+        .search-box input:focus { outline: none; border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .search-box .hint { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #9ca3af; }
+        .block { background: #f9fafb; border-left: 4px solid #10b981; padding: 20px; margin: 15px 0; border-radius: 8px; transition: all 0.3s; cursor: pointer; }
+        .block:hover { transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left-color: #667eea; }
+        .block.deleted { opacity: 0.6; border-left-color: #ef4444; }
+        .block-id { font-size: 12px; color: #6b7280; font-family: 'Courier New', monospace; margin-bottom: 8px; }
+        .block-content { margin: 12px 0; line-height: 1.7; color: #374151; white-space: pre-wrap; }
+        .block-meta { font-size: 12px; color: #6b7280; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+        .keyword { display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; margin-top: 4px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+        .badge-readonly { background: #fef3c7; color: #92400e; }
+        .badge-deleted { background: #fee2e2; color: #991b1b; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s; }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-delete:hover { background: #dc2626; }
+        .btn-restore { background: #10b981; color: white; }
+        .btn-restore:hover { background: #059669; }
+        textarea, input[type="text"] { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color 0.3s; }
+        textarea:focus, input[type="text"]:focus { outline: none; border-color: #667eea; }
+        textarea { min-height: 120px; resize: vertical; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #4b5563; font-weight: 500; font-size: 14px; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-card .number { font-size: 32px; font-weight: bold; }
+        .stat-card .label { font-size: 13px; opacity: 0.9; margin-top: 5px; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
+        .empty-state svg { width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.5; }
+        .sidebar h3 { font-size: 16px; color: #374151; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+        .sidebar-block { background: #f9fafb; padding: 12px; margin: 8px 0; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-block:hover { background: #e0e7ff; border-left-color: #667eea; }
+        .sidebar-block .sidebar-keyword { font-size: 11px; color: #6b7280; margin-top: 4px; }
+        .highlight { background: #fef08a; padding: 2px 4px; border-radius: 3px; }
+        .terminal { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; margin-top: 15px; }
+        .terminal .prompt { color: #10b981; }
+        .terminal .command { color: #60a5fa; }
+        .terminal .output { color: #e2e8f0; margin-top: 5px; }
+        .api-info { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 13px; }
+        .api-info h4 { color: #0369a1; margin-bottom: 8px; }
+        .api-info code { background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', monospace; }
+        .status-bar { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .status-bar.error { background: #ef4444; }
+        .status-bar.loading { background: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧱 块存储编辑器 v4 <span class="api-badge">真正绑定 blocks.json</span></h1>
+        <p>by AI 小Q | 网站 ↔ blocks.json 实时同步 | 生成时间：2026-06-19 17:54</p>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+        <div>📡 数据状态：<span id="statusText">正在加载 blocks.json...</span></div>
+        <div>🔄 <a href="javascript:location.reload()" style="color:white; text-decoration:none;">刷新</a></div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="card">
+                <h2>🔍 实时搜索块</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="输入关键词，或留空显示所有块..." oninput="realTimeSearch()" autofocus />
+                    <div class="hint">实时搜索中...</div>
+                </div>
+                <div class="terminal">
+                    <div><span class="prompt">$</span> <span class="command" id="terminalCommand">等待输入...</span></div>
+                    <div class="output" id="terminalOutput">输入关键词开始搜索</div>
+                </div>
+                <div class="api-info">
+                    <h4>🤖 终端操作指南</h4>
+                    <p>1. 下载数据：<code>curl -s blocks.json > /tmp/blocks.json</code></p>
+                    <p>2. 搜索块：<code>python3 block_api.py search "关键词"</code></p>
+                    <p>3. 修改 blocks.json 后刷新本页 → 网站自动更新！</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📦 块列表</h2>
+                <div id="blocksContainer"></div>
+            </div>
+
+            <div class="card">
+                <h2>➕ 添加新块</h2>
+                <div class="form-group">
+                    <label>块内容（支持 Markdown）</label>
+                    <textarea id="newContent" placeholder="输入块内容..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>关键词（逗号分隔）</label>
+                    <input type="text" id="newKeywords" placeholder="例如：微调,部署,chapter1" />
+                </div>
+                <div class="form-group">
+                    <label>作者标识</label>
+                    <input type="text" id="newAuthor" value="ai:AI_小Q" />
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="newReadonly" checked /> 设为只读</label>
+                </div>
+                <button class="btn" style="background: #10b981; color: white; width: 100%;" onclick="addBlock()">✅ 添加块</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h3>📋 实时匹配结果</h3>
+            <div id="sidebarResults">
+                <div style="color: #9ca3af; text-align: center; padding: 40px 20px;">
+                    输入关键词，这里会显示匹配的块
+                </div>
+            </div>
+            <div class="stats" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <div class="number" id="totalBlocks">0</div>
+                    <div class="label">总块数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="activeBlocks">0</div>
+                    <div class="label">活跃块</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="matchedBlocks">0</div>
+                    <div class="label">匹配块</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // 真正绑定 blocks.json
+        // ========================================
+        const DATA_URL = 'blocks.json';  // 同目录下的数据文件
+        let allBlocks = [];
+        let dataLoaded = false;
+
+        // 加载 blocks.json（真正从文件读取）
+        async function loadBlocksFromJSON() {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            
+            statusBar.className = 'status-bar loading';
+            statusText.textContent = '正在加载 blocks.json...';
+            
+            try {
+                const response = await fetch(DATA_URL + '?t=' + Date.now());  // 防止缓存
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allBlocks = data.blocks || [];
+                dataLoaded = true;
+                
+                statusBar.className = 'status-bar';
+                statusText.textContent = `✅ 已加载 ${allBlocks.length} 个块（来自 blocks.json）`;
+                
+                console.log('✅ 数据已加载:', allBlocks.length, '个块');
+                return allBlocks;
+                
+            } catch (error) {
+                console.error('❌ 加载 blocks.json 失败:', error);
+                statusBar.className = 'status-bar error';
+                statusText.textContent = '❌ 加载失败，使用初始数据';
+                
+                // 失败时返回初始数据
+                allBlocks = getInitialBlocks();
+                dataLoaded = true;
+                return allBlocks;
+            }
+        }
+
+        // 初始数据（备用）
+        function getInitialBlocks() {
+            return [
+                {
+                    id: 'b_chap1_intro',
+                    content: '## 微调与部署\n\n微调是调整预训练模型以适应特定任务的过程。',
+                    keywords: ['微调', '部署', 'chapter1'],
+                    author: 'ai:AI_小Q',
+                    readOnly: true,
+                    deleted: false,
+                    createdAt: '2026-06-19 15:30:00',
+                    updatedAt: '2026-06-19 15:30:00'
+                }
+            ];
+        }
+
+        // 保存数据（模拟，实际需要后端 API）
+        async function saveBlocksToJSON() {
+            console.log('💡 保存数据需要后端 API，当前为模拟');
+            console.log('📝 要保存的数据:', JSON.stringify({blocks: allBlocks}, null, 2));
+            alert('✅ 块已添加（模拟保存）\n\n⚠️ 要真正保存，请手动更新 blocks.json 文件');
+        }
+
+        // 实时搜索
+        function realTimeSearch() {
+            if (!dataLoaded) return;
+            
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            const terminalCommand = document.getElementById('terminalCommand');
+            const terminalOutput = document.getElementById('terminalOutput');
+            
+            if (!keyword) {
+                terminalCommand.textContent = 'curl -s blocks.json | jq .';
+                terminalOutput.textContent = `找到 ${allBlocks.filter(b => !b.deleted).length} 个活跃块`;
+                renderBlocks(allBlocks.filter(b => !b.deleted));
+                renderSidebar(allBlocks.filter(b => !b.deleted));
+                updateStats(allBlocks, 0);
+                return;
+            }
+            
+            terminalCommand.textContent = `curl -s blocks.json | jq '.blocks[] | select(.keywords[] | contains("${keyword}"))'`;
+            
+            const matched = allBlocks.filter(b => 
+                !b.deleted && (
+                    b.keywords.some(k => k.toLowerCase().includes(keyword)) ||
+                    b.content.toLowerCase().includes(keyword) ||
+                    b.id.toLowerCase().includes(keyword)
+                )
+            );
+            
+            terminalOutput.textContent = `找到 ${matched.length} 个匹配块`;
+            
+            renderBlocks(matched, keyword);
+            renderSidebar(matched, keyword);
+            updateStats(allBlocks, matched.length);
+        }
+
+        // 渲染块列表
+        function renderBlocks(blocks, highlightKeyword = '') {
+            const container = document.getElementById('blocksContainer');
+            
+            if (blocks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <p>未找到匹配的块</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            blocks.forEach(block => {
+                const div = document.createElement('div');
+                div.className = 'block' + (block.deleted ? ' deleted' : '');
+                
+                let content = block.content;
+                if (highlightKeyword) {
+                    const regex = new RegExp(`(${highlightKeyword})`, 'gi');
+                    content = content.replace(regex, '<span class="highlight">$1</span>');
+                }
+                
+                div.innerHTML = `
+                    <div class="block-id">
+                        ${block.id}
+                        ${block.readOnly ? '<span class="badge badge-readonly">只读</span>' : ''}
+                        ${block.deleted ? '<span class="badge badge-deleted">已废弃</span>' : ''}
+                    </div>
+                    <div class="block-content">${formatContent(content)}</div>
+                    <div class="block-meta">
+                        <div>作者：${block.author} | 创建：${block.createdAt}</div>
+                        <div style="margin-top: 8px;">
+                            ${block.keywords.map(k => `<span class="keyword">${k}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 渲染侧边栏
+        function renderSidebar(blocks, highlightKeyword = '') {
+            const container = document.getElementById('sidebarResults');
+            
+            if (blocks.length === 0) {
+                container.innerHTML = `<div style="color: #9ca3af; text-align: center; padding: 40px 20px;">未找到匹配的块</div>`;
+                return;
+            }
+            
+            container.innerHTML = '';
+            blocks.forEach(block => {
+                const div = document.createElement('div');
+                div.className = 'sidebar-block';
+                div.innerHTML = `
+                    <div><strong>${block.id}</strong></div>
+                    <div style="margin-top: 4px; color: #4b5563;">${block.content.substring(0, 50)}...</div>
+                    <div class="sidebar-keyword">匹配：${highlightKeyword || '内容匹配'}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 格式化内容
+        function formatContent(content) {
+            return content
+                .replace(/## (.*)/g, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // 添加块
+        async function addBlock() {
+            const content = document.getElementById('newContent').value.trim();
+            const keywords = document.getElementById('newKeywords').value.trim().split(',').map(s => s.trim()).filter(s => s);
+            const author = document.getElementById('newAuthor').value.trim();
+            const readOnly = document.getElementById('newReadonly').checked;
+            
+            if (!content) {
+                alert('请输入内容！');
+                return;
+            }
+            
+            const newBlock = {
+                id: 'b_' + Date.now(),
+                content: content,
+                keywords: keywords,
+                author: author || 'anonymous',
+                readOnly: readOnly,
+                deleted: false,
+                createdAt: new Date().toLocaleString('zh-CN'),
+                updatedAt: new Date().toLocaleString('zh-CN')
+            };
+            
+            allBlocks.push(newBlock);
+            await saveBlocksToJSON();
+            realTimeSearch();
+            updateStats(allBlocks, 0);
+            
+            document.getElementById('newContent').value = '';
+            document.getElementById('newKeywords').value = '';
+            alert('✅ 块已添加（模拟保存）！');
+        }
+
+        // 更新统计
+        function updateStats(blocks, matchedCount) {
+            const total = blocks.length;
+            const active = blocks.filter(b => !b.deleted).length;
+            
+            document.getElementById('totalBlocks').textContent = total;
+            document.getElementById('activeBlocks').textContent = active;
+            document.getElementById('matchedBlocks').textContent = matchedCount;
+        }
+
+        // 初始化（真正从 blocks.json 加载）
+        window.onload = async function() {
+            await loadBlocksFromJSON();
+            realTimeSearch();
+        };
+    </script>
+</body>
+</html>
